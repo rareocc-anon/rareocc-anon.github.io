@@ -92,12 +92,13 @@
     }
 
     // grid (x=lateral, y=forward/BEV-up, z=height) -> Three.js y-up centered at origin.
-    // Camera on +Z: +X -> screen-right. CompoSIA stores BEV-up as +y -> use (cy-y).
-    // SAFE/custom store BEV-up as -y relative to that convention -> opts.flipForward.
+    // Camera on +Z: +X -> screen-right. CompoSIA: BEV-up as +y -> (cy-y).
+    // SAFE/custom: opposite forward axis only (flipForward). Do not mirror X — BEV left/right already matches.
     _gridToThree(gx, gy, gz) {
       const [cx, cy, cz] = this.center;
+      const fx = this.opts.flipLateral ? (cx - gx) : (gx - cx);
       const fz = this.opts.flipForward ? (gy - cy) : (cy - gy);
-      return [gx - cx, gz - cz, fz];
+      return [fx, gz - cz, fz];
     }
 
     // flat [x,y,z,c, ...] -> one InstancedMesh per class c, positions centered at origin

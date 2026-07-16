@@ -49,7 +49,10 @@
           <div class="is-size-5 publication-authors">
             <span class="author-block">Anonymous Institution</span>
           </div>
-          <div class="is-size-5 publication-venue" style="margin-top:8px;">Paper under review</div>
+          <div class="is-size-5 publication-venue" style="margin-top:8px;">Submitted to SDAD @ ECCV 2026</div>
+          <div class="is-size-6" style="margin-top:6px;color:#555;">
+            Safe and Defensive Autonomous Driving Workshop (SDAD ECCV 2026)
+          </div>
 
           <div class="column has-text-centered publication-links">
             <!-- Live interactive demo (this is the real link) -->
@@ -110,21 +113,16 @@
             with some of the most concerning instances being ambulance obstruction. Yet the sensor data
             needed to study these long-tail events at scale is exactly what their rarity makes scarce. We
             propose <b>RareOcc (ROCC)</b>, a system that generates realistic 4D occupancy and LiDAR for
-            customizable long-tail situations and documented vehicular crashes; to our knowledge it is the
-            first pipeline to produce sensor-level occupancy and LiDAR for crash-grounded, editable
-            out-of-distribution driving scenes, extending the long tail of training data by generation
-            rather than by collection.
-          </p>
-          <p>
-            ROCC uses a bird's-eye-view (BEV) layout as a shared intermediary that three interchangeable
-            methods write to (CIREN-based crash recreation, LLM-based behavior specification, and
-            CompoSIA-based real-scene editing) and lifts it to occupancy with an entity-grounded generator
-            that places each agent from its specified box and replaces the diffusion stage of prior
-            occupancy-centric pipelines. Evaluated on nuPlan-Occ mini-val frames, our model outperforms the
-            state-of-the-art UniScene-v2 generator by <b>17.1 points</b> in foreground occupancy mIoU
-            (<b>49.3</b> vs. 32.2). Despite both autoencoders having a similar reconstruction ceiling, our
-            approach maintains stability on denser frames where the baseline's performance collapses to 9.5;
-            ROCC also preserves rare categories under scene edits the baseline drops.
+            customizable long-tail situations and documented vehicular crashes; to our knowledge RareOcc
+            is the first pipeline to jointly produce supports: crash-grounded 4D generation, editable BEV
+            authoring, occupancy generation, and LiDAR generation. ROCC uses a bird's-eye-view (BEV) layout
+            as a shared intermediary that three interchangeable methods write to (CIREN-based crash
+            recreation, LLM-based behavior specification, and CompoSIA-based real-scene editing) and lifts
+            it to occupancy with an entity-grounded generator that places each agent from its specified box
+            and replaces the diffusion stage of prior occupancy-centric pipelines. Evaluated on nuPlan-Occ
+            mini-val frames, our model outperforms the state-of-the-art UniScene-v2 generator by
+            <b>19.4 points</b> in occupancy mIoU. ROCC also preserves rare categories under scene edits the
+            baseline drops.
           </p>
         </div>
       </div>
@@ -213,7 +211,7 @@
 
 <footer class="footer">
   <div class="content has-text-centered">
-    <p>RareOcc · anonymized project page for double-blind review. No analytics, no tracking.</p>
+    <p>RareOcc · anonymized project page for double-blind review.</p>
     <p style="font-size:12px;color:#888;">Page layout adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> template (CC BY-SA 4.0).</p>
   </div>
 </footer>
