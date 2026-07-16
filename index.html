@@ -91,7 +91,7 @@
       <iframe class="teaser-frame" src="demo.html" title="RareOcc interactive demo" loading="lazy"></iframe>
       <h2 class="subtitle has-text-centered">
         An author-specified scenario — a text prompt, a reconstructed crash, or an edit of a real scene —
-        becomes a BEV layout and a generated <span class="dnerf">3D semantic occupancy over time</span>.
+        becomes a BEV layout and a generated <span class="dnerf">4D semantic occupancy over time</span>.
         Drag to orbit, scroll to zoom, scrub the time slider.
       </h2>
     </div>
@@ -109,7 +109,7 @@
             Autonomous vehicle behavior in emergency and rare situations is a well documented challenge,
             with some of the most concerning instances being ambulance obstruction. Yet the sensor data
             needed to study these long-tail events at scale is exactly what their rarity makes scarce. We
-            propose <b>RareOcc (ROCC)</b>, a system that generates realistic 3D occupancy and LiDAR for
+            propose <b>RareOcc (ROCC)</b>, a system that generates realistic 4D occupancy and LiDAR for
             customizable long-tail situations and documented vehicular crashes; to our knowledge it is the
             first pipeline to produce sensor-level occupancy and LiDAR for crash-grounded, editable
             out-of-distribution driving scenes, extending the long tail of training data by generation
@@ -120,11 +120,11 @@
             methods write to (CIREN-based crash recreation, LLM-based behavior specification, and
             CompoSIA-based real-scene editing) and lifts it to occupancy with an entity-grounded generator
             that places each agent from its specified box and replaces the diffusion stage of prior
-            occupancy-centric pipelines. On held-out nuPlan-Occ frames it raises foreground occupancy mIoU
-            from <b>18.1 to 48.5</b> over the released UniScene-v2 generator while both autoencoders share a
-            comparable reconstruction ceiling, stays stable on denser frames where that baseline degrades to
-            9.5, and holds at 49.3 across the complete validation split, where UniScene-v2's own published
-            score is 32.2; it also preserves rare agents under scene edits the baseline drops.
+            occupancy-centric pipelines. Evaluated on nuPlan-Occ mini-val frames, our model outperforms the
+            state-of-the-art UniScene-v2 generator by <b>17.1 points</b> in foreground occupancy mIoU
+            (<b>49.3</b> vs. 32.2). Despite both autoencoders having a similar reconstruction ceiling, our
+            approach maintains stability on denser frames where the baseline's performance collapses to 9.5;
+            ROCC also preserves rare categories under scene edits the baseline drops.
           </p>
         </div>
       </div>

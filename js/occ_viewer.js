@@ -107,7 +107,7 @@
         const n = pos.length / 3;
         const mesh = new THREE.InstancedMesh(BOX, mat, n);
         for (let k = 0; k < n; k++) {
-          mtx.setPosition(pos[k * 3] - cx, pos[k * 3 + 2] - cz, pos[k * 3 + 1] - cy); // (x, z, y)
+          mtx.setPosition(pos[k * 3] - cx, pos[k * 3 + 2] - cz, cy - pos[k * 3 + 1]); // (x, z, -y): grid-y flipped so world-y -> screen up (matches BEV + LiDAR)
           mesh.setMatrixAt(k, mtx);
         }
         mesh.instanceMatrix.needsUpdate = true;
@@ -120,7 +120,7 @@
       const [cx, cy, cz] = this.center;
       let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
       for (let i = 0; i < flat.length; i += 4) {
-        const p = [flat[i] - cx, flat[i + 2] - cz, flat[i + 1] - cy];
+        const p = [flat[i] - cx, flat[i + 2] - cz, cy - flat[i + 1]];
         for (let k = 0; k < 3; k++) { if (p[k] < lo[k]) lo[k] = p[k]; if (p[k] > hi[k]) hi[k] = p[k]; }
       }
       if (lo[0] > hi[0]) return;
