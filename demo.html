@@ -156,7 +156,7 @@ function pick(id){
   nF=cur.bev.length; frame=0; $('slider').max=nF-1;
   setFrame(0);
 }
-function clampIdx(list){ return list[Math.min(frame, list.length-1)]; }
+function clampIdx(list){ return list[Math.min(frame, list.length-1)]+'?v=composync'; }  // cache-bust BEV/RGB/bbox images too (were showing stale frames)
 function setFrame(i){
   frame=((i%nF)+nF)%nF;
   if(imgs.bev) imgs.bev.src=clampIdx(cur.bev);
