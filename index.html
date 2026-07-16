@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>RareOcc: Controllable 4D Occupancy Generation for Long-Tail Driving Scenes</title>
+
+<!-- Nerfies-style stack: Bulma + Google fonts + Font Awesome + Academicons (no analytics) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.1/css/academicons.min.css">
+
+<style>
+  body { font-family: 'Noto Sans', sans-serif; }
+  .publication-title { font-family: 'Google Sans', 'Noto Sans', sans-serif; }
+  .publication-authors, .publication-venue { font-family: 'Google Sans', 'Noto Sans', sans-serif; }
+  .author-block { display: inline-block; margin: 0 3px; }
+  .publication-venue { color: #4a4fc4; font-weight: 600; }
+  .publication-links { margin-top: 22px; }
+  .publication-links .button { margin: 4px; }
+  .anon-banner { background:#fff3cd; color:#8a6d00; text-align:center; font-size:13px; padding:7px 12px; }
+  .teaser-frame { width:100%; height:min(86vh,900px); border:1px solid #e2e7ee; border-radius:12px; box-shadow:0 6px 24px rgba(20,32,50,.08); background:#f4f6f9; }
+  .teaser-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .teaser-bar .hint { color:#6b7684; font-size:13.5px; }
+  .teaser .subtitle { margin-top: 16px; }
+  .method-card { height:100%; border:1px solid #e2e7ee; border-radius:10px; padding:18px 20px; }
+  .method-card .tag { font-weight:700; }
+  .hero-body { padding-top: 3rem; padding-bottom: 2rem; }
+  .abstract .content { text-align: justify; }
+</style>
+</head>
+<body>
+
+<div class="anon-banner">Anonymous submission — under double-blind review. Author and affiliation details are withheld.</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">RareOcc: Controllable 4D Occupancy Generation<br>for Long-Tail Driving Scenes</h1>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Anonymous Author(s)</span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Anonymous Institution</span>
+          </div>
+          <div class="is-size-5 publication-venue" style="margin-top:8px;">Paper under review</div>
+
+          <div class="column has-text-centered publication-links">
+            <!-- Live interactive demo (this is the real link) -->
+            <span class="link-block">
+              <a href="demo.html" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-cube"></i></span>
+                <span>Interactive Demo</span>
+              </a>
+            </span>
+            <!-- Placeholders: wire these when the anonymized paper / code links exist -->
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark" style="opacity:.55;pointer-events:none;">
+                <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                <span>Paper (soon)</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="#" class="external-link button is-normal is-rounded is-dark" style="opacity:.55;pointer-events:none;">
+                <span class="icon"><i class="fab fa-github"></i></span>
+                <span>Code (soon)</span>
+              </a>
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TEASER (live embedded demo) ===== -->
+<section class="hero teaser">
+  <div class="container" style="max-width:1280px;">
+    <div class="hero-body">
+      <div class="teaser-bar">
+        <span class="hint">Interactive demo — drag to orbit · scroll to zoom · scrub the time slider</span>
+        <a class="button is-small is-rounded is-dark" href="demo.html" target="_blank" rel="noopener">Open in full page ↗</a>
+      </div>
+      <iframe class="teaser-frame" src="demo.html" title="RareOcc interactive demo" loading="lazy"></iframe>
+      <h2 class="subtitle has-text-centered">
+        An author-specified scenario — a text prompt, a reconstructed crash, or an edit of a real scene —
+        becomes a BEV layout and a generated <span class="dnerf">3D semantic occupancy over time</span>.
+        Drag to orbit, scroll to zoom, scrub the time slider.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABSTRACT ===== -->
+<section class="section abstract">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Autonomous vehicle behavior in emergency and rare situations is a well documented challenge,
+            with some of the most concerning instances being ambulance obstruction. Yet the sensor data
+            needed to study these long-tail events at scale is exactly what their rarity makes scarce. We
+            propose <b>RareOcc (ROCC)</b>, a system that generates realistic 3D occupancy and LiDAR for
+            customizable long-tail situations and documented vehicular crashes; to our knowledge it is the
+            first pipeline to produce sensor-level occupancy and LiDAR for crash-grounded, editable
+            out-of-distribution driving scenes, extending the long tail of training data by generation
+            rather than by collection.
+          </p>
+          <p>
+            ROCC uses a bird's-eye-view (BEV) layout as a shared intermediary that three interchangeable
+            methods write to (CIREN-based crash recreation, LLM-based behavior specification, and
+            CompoSIA-based real-scene editing) and lifts it to occupancy with an entity-grounded generator
+            that places each agent from its specified box and replaces the diffusion stage of prior
+            occupancy-centric pipelines. On held-out nuPlan-Occ frames it raises foreground occupancy mIoU
+            from <b>18.1 to 48.5</b> over the released UniScene-v2 generator while both autoencoders share a
+            comparable reconstruction ceiling, stays stable on denser frames where that baseline degrades to
+            9.5, and holds at 49.3 across the complete validation split, where UniScene-v2's own published
+            score is 32.2; it also preserves rare agents under scene edits the baseline drops.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PIPELINE (Figure 1) ===== -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths"><h2 class="title is-3">Pipeline</h2></div>
+    </div>
+    <figure class="image">
+      <img src="figures/fig1_pipeline.png" alt="Three authoring front-ends produce an ego-centric BEV layout, decoded to 3D occupancy and LiDAR.">
+    </figure>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <p class="content" style="margin-top:14px;">
+          <b>Figure 1.</b> Crash-grounded controllable generation. Three authoring front-ends —
+          editable custom scenes, crash reconstructions, and curated text — produce an ego-centric
+          bird's-eye-view layout, which an occupancy DiT turns into 3D semantic occupancy and, in
+          turn, LiDAR.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== METHOD: three front-ends ===== -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Three authoring front-ends</h2>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column"><div class="method-card">
+        <span class="tag is-medium" style="background:#eef0fb;color:#4a4fc4;">Custom (LLM)</span>
+        <p style="margin-top:10px;">Natural-language prompts drive a traffic simulator that emits the BEV layout — full control over agents, maneuvers, and road type.</p>
+      </div></div>
+      <div class="column"><div class="method-card">
+        <span class="tag is-medium" style="background:#fdecea;color:#c0392b;">SAFE</span>
+        <p style="margin-top:10px;">Reconstructs real crash reports into vehicle trajectories, recovering long-tail collision geometry from structured accident descriptions.</p>
+      </div></div>
+      <div class="column"><div class="method-card">
+        <span class="tag is-medium" style="background:#e6f4ea;color:#1e7a3d;">CompoSIA</span>
+        <p style="margin-top:10px;">Edits real recorded scenes (cut-ins, lane changes) on the true map, warping agents while keeping the surrounding world consistent.</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BEV -> OCCUPANCY (Figure 2) ===== -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths"><h2 class="title is-3">BEV &rarr; Occupancy &rarr; LiDAR</h2></div>
+    </div>
+    <figure class="image">
+      <img src="figures/fig2_bev2occ.png" alt="A grounded latent VAE encodes occupancy to grounded latents; a CNN generates latents from a BEV layout, decoded to occupancy and LiDAR.">
+    </figure>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <p class="content" style="margin-top:14px;">
+          <b>Figure 2.</b> A grounded latent VAE (top) encodes ground-truth occupancy into grounded
+          latents decoded via semantic Gaussians. At generation time (bottom) a CNN maps a BEV layout
+          to those latents, which the frozen decoder turns into occupancy, and an occupancy-to-LiDAR
+          model into a point cloud.
+        </p>
+      </div>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <p class="content">
+          The <a href="demo.html">interactive demo</a> shows <b>22 curated scenarios</b> across the three
+          front-ends, each as <b>input → 2D BEV motion → 4D occupancy → 4D LiDAR</b> (occupancy is a
+          200&times;200&times;16 voxel grid, per-frame dynamics, each frame decoded independently; LiDAR is
+          rendered as an interactive point cloud). Custom scenes add a World-frame / Ego-centric view toggle.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="content has-text-centered">
+    <p>RareOcc · anonymized project page for double-blind review. No analytics, no tracking.</p>
+    <p style="font-size:12px;color:#888;">Page layout adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> template (CC BY-SA 4.0).</p>
+  </div>
+</footer>
+
+</body>
+</html>

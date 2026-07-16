@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RareOcc — OOD driving scenes (CompoSIA · SAFE · Custom)</title>
+<style>
+ :root{--bg:#f4f6f9;--panel:#fff;--ink:#1a2029;--mut:#6b7684;--line:#e2e7ee;--accent:#2f6df6}
+ body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+ header{padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+ header h1{margin:0;font-size:15px}
+ select{font-size:13px;padding:6px 8px;border-radius:8px;border:1px solid #c9d4e4;max-width:380px}
+ .badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+ .badge.composia{background:#e6f4ea;color:#1e7a3d}.badge.SAFE{background:#fdecea;color:#c0392b}.badge.custom{background:#eef0fb;color:#4a4fc4}
+ .inbox{padding:10px 18px;font-size:13px;color:#333;background:var(--panel);border-bottom:1px solid var(--line)}
+ .inbox .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin-right:8px}
+ .inbox img.sketch{max-height:110px;border:1px solid var(--line);border-radius:6px;vertical-align:middle;margin-left:10px}
+ .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:12px;align-items:start;max-width:1500px;margin:0 auto}
+ .col{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+ .col .hd{padding:7px 11px;font-size:12px;font-weight:600;border-bottom:1px solid var(--line)}
+ .box{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#fafbfc}
+ .box img,.box video{max-width:100%;max-height:100%}
+ .box3{width:100%;height:340px}
+ .occ-canvas{width:100%;height:340px}.occ-canvas canvas{display:block}
+ .occ-wrap{position:relative}
+ .occ-hint{position:absolute;top:6px;left:8px;font-size:11px;color:var(--mut);background:rgba(255,255,255,.75);padding:1px 6px;border-radius:6px;pointer-events:none}
+ .occ-legend{display:none}
+ .legend{padding:8px 14px 12px}
+ .legend h3{margin:8px 0 3px;font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+ .lrow{display:flex;align-items:center;gap:8px;font-size:12px;padding:1px 0}
+ .sw{width:13px;height:13px;border-radius:3px;border:1px solid #0002;flex:0 0 auto}
+ .controls{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line)}
+ .controls button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+ .controls input{flex:1;max-width:520px}
+ .cnt{font-size:12px;color:var(--mut);min-width:64px}
+</style></head><body>
+<header>
+  <h1>OOD driving scenes</h1>
+  <select id="sel"></select>
+  <span id="typ" class="badge"></span>
+</header>
+<div class="inbox" id="input">—</div>
+<div class="wrap" id="panels"></div>
+<div class="controls">
+  <button id="play">▶</button>
+  <input id="slider" type="range" min="0" max="11" value="0">
+  <span class="cnt" id="cnt">t 1</span>
+</div>
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/occ_viewer.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const TYPES={composia:'CompoSIA (video-diffusion edit)', SAFE:'SAFE (CIREN crash)', custom:'Custom (LLM prompt)'};
+let SAMPLES=[], cur=null, frame=0, nF=12, playing=false, timer=null;
+let occ=null, lid=null, imgs={};   // active viewers for the ONE open scene
+
+class PCViewer{
+  constructor(el){
+    this.el=el; this.frames=null;
+    const w=el.clientWidth||420,h=el.clientHeight||360;
+    this.scene=new THREE.Scene(); this.scene.background=new THREE.Color(0xeef1f5);
+    this.camera=new THREE.PerspectiveCamera(55,w/h,0.1,5000);
+    this.renderer=new THREE.WebGLRenderer({antialias:true}); this.renderer.setSize(w,h);
+    el.innerHTML=''; el.appendChild(this.renderer.domElement);
+    this.controls=new THREE.OrbitControls(this.camera,this.renderer.domElement);
+    this.camera.position.set(0,95,66); this.controls.target.set(0,0,0); this.controls.update();
+    this.points=null;
+    const anim=()=>{ if(!this.el.isConnected) return; requestAnimationFrame(anim);
+      this.controls.update(); this.renderer.render(this.scene,this.camera); };
+    anim();
+  }
+  async load(binUrl, metaUrl){
+    const [buf,meta]=await Promise.all([fetch(binUrl).then(r=>r.arrayBuffer()),fetch(metaUrl).then(r=>r.json())]);
+    this.frames=[]; let off=0;
+    for(const n of meta.counts){
+      const xyz=new Int16Array(buf,off,n*3); off+=n*6;
+      const inten=new Uint8Array(buf,off,n); off+=n;
+      this.frames.push({xyz,n});
+    }
+    this.goto(0);
+  }
+  goto(i){
+    if(!this.frames) return;
+    const f=this.frames[Math.min(i,this.frames.length-1)];
+    if(this.points){ this.scene.remove(this.points); this.points.geometry.dispose(); this.points.material.dispose(); }
+    const pos=new Float32Array(f.n*3), col=new Float32Array(f.n*3);
+    for(let k=0;k<f.n;k++){
+      const x=f.xyz[k*3]*0.01,y=f.xyz[k*3+1]*0.01,z=f.xyz[k*3+2]*0.01;
+      pos[k*3]=x; pos[k*3+1]=z; pos[k*3+2]=-y;
+      const t=Math.max(0,Math.min(1,(z+2.5)/5.5));
+      col[k*3]=0.15+0.75*t; col[k*3+1]=0.35+0.35*(1-t); col[k*3+2]=0.85-0.65*t;
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    this.points=new THREE.Points(g,new THREE.PointsMaterial({size:0.34,vertexColors:true}));
+    this.scene.add(this.points);
+  }
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function panel(title, inner){
+  const c=document.createElement('div'); c.className='col';
+  c.innerHTML=`<div class="hd">${title}</div>`; c.append(inner); return c;
+}
+function imgPanel(key){ const b=document.createElement('div'); b.className='box';
+  const im=document.createElement('img'); b.append(im); imgs[key]=im; return b; }
+
+const LEGEND=`
+ <h3>BEV colors</h3>
+ <div class="lrow"><span class="sw" style="background:#8790a0"></span>drivable road</div>
+ <div class="lrow"><span class="sw" style="background:#fb9a99"></span>crosswalk</div>
+ <div class="lrow"><span class="sw" style="background:#dcdcdc"></span>lane divider</div>
+ <div class="lrow"><span class="sw" style="background:#ffd200"></span>road boundary</div>
+ <div class="lrow"><span class="sw" style="background:#f4894e"></span>vehicle</div>
+ <div class="lrow"><span class="sw" style="background:#4c86c6"></span>pedestrian</div>
+ <h3>4D occupancy classes</h3>
+ <div class="lrow"><span class="sw" style="background:#b9c2cc"></span>background</div>
+ <div class="lrow"><span class="sw" style="background:#f4894e"></span>vehicle</div>
+ <div class="lrow"><span class="sw" style="background:#e5555f"></span>bicycle</div>
+ <div class="lrow"><span class="sw" style="background:#4c86c6"></span>pedestrian</div>
+ <div class="lrow"><span class="sw" style="background:#a9805f"></span>generic object</div>
+ <h3>LiDAR</h3>
+ <div class="lrow" style="color:var(--mut)">points colored by height</div>`;
+
+function pick(id){
+  cur=SAMPLES.find(s=>s.id===id); if(!cur) return;
+  // teardown previous viewers so only ONE scene is ever resident
+  occ=null; lid=null; imgs={};
+  if(playing) play();
+  $('typ').textContent=cur.type; $('typ').className='badge '+cur.type;
+  const P=$('panels'); P.innerHTML='';
+  const i=cur.input||{};
+  if(cur.type==='composia'){
+    $('input').innerHTML=`<span class="lbl">Edit</span>${esc(i.edit)}`+(i.authored_by_us?' <b style="color:#8a6d00">(authored by us)</b>':'');
+    P.append(panel('Camera (photoreal)', imgPanel('rgb')));
+    P.append(panel('3D-box condition', imgPanel('bbox')));
+  } else if(cur.type==='SAFE'){
+    $('input').innerHTML=`<span class="lbl">CIREN crash</span>${esc((i.description||'').slice(0,240))}…<img class="sketch" src="${i.sketch}">`;
+  } else {
+    $('input').innerHTML=`<span class="lbl">Prompt</span>${esc(cur.prompt)} <span style="color:var(--mut);font-size:11.5px">· ego-centric frame (ego fixed at centre, heading up)</span>`;
+  }
+  P.append(panel('2D BEV', imgPanel('bev')));
+  const oh=document.createElement('div'); oh.className='occ-canvas';
+  P.append(panel('4D occupancy · drag to orbit', oh));
+  occ=new OccViewer(oh, cur.occ, {embedded:true, topdown:true});
+  if(cur.lidar_bin){
+    const lh=document.createElement('div'); lh.className='box3';
+    P.append(panel('4D LiDAR (occ→LiDAR) · drag to orbit', lh));
+    lid=new PCViewer(lh); lid.load(cur.lidar_bin, cur.lidar_meta);
+  } else if(cur.type==='composia' && cur.lidar_mp4){
+    const v=document.createElement('video'); v.src=cur.lidar_mp4; v.loop=true; v.muted=true; v.autoplay=true; v.playsInline=true;
+    const b=document.createElement('div'); b.className='box'; b.append(v);
+    P.append(panel('4D LiDAR (occ→LiDAR, video)', b));
+  }
+  const lg=document.createElement('div'); lg.className='col legend'; lg.innerHTML=LEGEND; P.append(lg);
+  nF=cur.bev.length; frame=0; $('slider').max=nF-1;
+  setFrame(0);
+}
+function clampIdx(list){ return list[Math.min(frame, list.length-1)]; }
+function setFrame(i){
+  frame=((i%nF)+nF)%nF;
+  if(imgs.bev) imgs.bev.src=clampIdx(cur.bev);
+  if(imgs.rgb && cur.input.rgb) imgs.rgb.src=clampIdx(cur.input.rgb);
+  if(imgs.bbox && cur.input.bbox) imgs.bbox.src=clampIdx(cur.input.bbox);
+  if(occ) occ.goto(frame);
+  if(lid) lid.goto(frame);
+  $('slider').value=frame; $('cnt').textContent='t '+(frame+1)+'/'+nF;
+}
+function play(){ playing=!playing; $('play').textContent=playing?'⏸':'▶';
+  if(playing) timer=setInterval(()=>setFrame(frame+1),320); else clearInterval(timer); }
+$('play').onclick=play;
+$('slider').oninput=e=>{ if(playing) play(); setFrame(+e.target.value); };
+
+fetch('samples.json').then(r=>r.json()).then(m=>{
+  SAMPLES=m.samples;
+  const sel=$('sel');
+  for(const t of ['composia','SAFE','custom']){
+    const grp=document.createElement('optgroup'); grp.label=TYPES[t];
+    for(const s of SAMPLES.filter(x=>x.type===t)){
+      const o=document.createElement('option'); o.value=s.id;
+      o.textContent=(s.scene||s.id).replace(/^custom_|^composia_|^safe_/,'').replace(/_/g,' ');
+      grp.append(o);
+    }
+    sel.append(grp);
+  }
+  sel.onchange=()=>pick(sel.value);
+  sel.value=SAMPLES[0].id; pick(SAMPLES[0].id);
+});
+</script></body></html>
