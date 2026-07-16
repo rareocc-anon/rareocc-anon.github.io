@@ -118,6 +118,7 @@ const LEGEND=`
  <div class="lrow"><span class="sw" style="background:#e5555f"></span>bicycle</div>
  <div class="lrow"><span class="sw" style="background:#4c86c6"></span>pedestrian</div>
  <div class="lrow"><span class="sw" style="background:#a9805f"></span>generic object</div>
+ <div class="lrow"><span class="sw" style="background:#2b6fff"></span>ego vehicle (CompoSIA)</div>
  <h3>LiDAR</h3>
  <div class="lrow" style="color:var(--mut)">points colored by height</div>`;
 
@@ -141,11 +142,11 @@ function pick(id){
   P.append(panel('2D BEV', imgPanel('bev')));
   const oh=document.createElement('div'); oh.className='occ-canvas';
   P.append(panel('4D occupancy · drag to orbit', oh));
-  occ=new OccViewer(oh, cur.occ+'?v=compolidar2', {embedded:true, topdown:true});
+  occ=new OccViewer(oh, cur.occ+'?v=composync', {embedded:true, topdown:true});
   if(cur.lidar_bin){
     const lh=document.createElement('div'); lh.className='box3';
     P.append(panel('4D LiDAR (occ→LiDAR) · drag to orbit', lh));
-    lid=new PCViewer(lh); lid.load(cur.lidar_bin+'?v=compolidar2', cur.lidar_meta+'?v=compolidar2');
+    lid=new PCViewer(lh); lid.load(cur.lidar_bin+'?v=composync', cur.lidar_meta+'?v=composync');
   } else if(cur.type==='composia' && cur.lidar_mp4){
     const v=document.createElement('video'); v.src=cur.lidar_mp4; v.loop=true; v.muted=true; v.autoplay=true; v.playsInline=true;
     const b=document.createElement('div'); b.className='box'; b.append(v);
@@ -170,7 +171,7 @@ function play(){ playing=!playing; $('play').textContent=playing?'⏸':'▶';
 $('play').onclick=play;
 $('slider').oninput=e=>{ if(playing) play(); setFrame(+e.target.value); };
 
-fetch('samples.json?v=compolidar2').then(r=>r.json()).then(m=>{
+fetch('samples.json?v=composync').then(r=>r.json()).then(m=>{
   SAMPLES=m.samples;
   const sel=$('sel');
   for(const t of ['composia','SAFE','custom']){
