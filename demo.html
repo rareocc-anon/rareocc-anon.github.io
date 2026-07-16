@@ -17,7 +17,8 @@
  .col .hd{padding:7px 11px;font-size:12px;font-weight:600;border-bottom:1px solid var(--line)}
  .box{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#fafbfc}
  .box img,.box video{max-width:100%;max-height:100%}
- .box3{width:100%;height:340px}
+ .box3{width:100%;height:340px;position:relative}
+ .box3 .load-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px;background:rgba(250,251,252,.92);z-index:2}
  .occ-canvas{width:100%;height:340px}.occ-canvas canvas{display:block}
  .occ-wrap{position:relative}
  .occ-hint{position:absolute;top:6px;left:8px;font-size:11px;color:var(--mut);background:rgba(255,255,255,.75);padding:1px 6px;border-radius:6px;pointer-events:none}
@@ -45,54 +46,96 @@
 </div>
 <script src="js/three.min.js"></script>
 <script src="js/OrbitControls.js"></script>
-<script src="js/occ_viewer.js"></script>
+<script src="js/occ_viewer.js?v=orientfix3"></script>
 <script>
+const CACHE_TAG='orientfix3';
 const $=id=>document.getElementById(id);
 const TYPES={composia:'CompoSIA (video-diffusion edit)', SAFE:'SAFE (CIREN crash)', custom:'Custom (LLM prompt)'};
 let SAMPLES=[], cur=null, frame=0, nF=12, playing=false, timer=null;
 let occ=null, lid=null, imgs={};   // active viewers for the ONE open scene
 
+// meters (x=lateral, y=forward, z=height) -> Three.js y-up (matches OccViewer)
+function worldToThree(x,y,z){ return [x, z, -y]; }
+
 class PCViewer{
   constructor(el){
-    this.el=el; this.frames=null;
+    this.el=el;
+    this.geometries=null;
+    this.frames=null;
+    this.material=new THREE.PointsMaterial({size:0.34,vertexColors:true});
+    this.points=null;
+    this._loadGen=0;
     const w=el.clientWidth||420,h=el.clientHeight||360;
     this.scene=new THREE.Scene(); this.scene.background=new THREE.Color(0xeef1f5);
     this.camera=new THREE.PerspectiveCamera(55,w/h,0.1,5000);
     this.renderer=new THREE.WebGLRenderer({antialias:true}); this.renderer.setSize(w,h);
-    el.innerHTML=''; el.appendChild(this.renderer.domElement);
+    el.textContent=''; el.appendChild(this.renderer.domElement);
     this.controls=new THREE.OrbitControls(this.camera,this.renderer.domElement);
     this.camera.position.set(0,95,66); this.controls.target.set(0,0,0); this.controls.update();
-    this.points=null;
     const anim=()=>{ if(!this.el.isConnected) return; requestAnimationFrame(anim);
       this.controls.update(); this.renderer.render(this.scene,this.camera); };
     anim();
   }
-  async load(binUrl, metaUrl){
-    const [buf,meta]=await Promise.all([fetch(binUrl).then(r=>r.arrayBuffer()),fetch(metaUrl).then(r=>r.json())]);
-    this.frames=[]; let off=0;
-    for(const n of meta.counts){
-      const xyz=new Int16Array(buf.slice(off,off+n*6)); off+=n*6; // aligned copy: interleaved i16+u8 layout makes off odd -> a VIEW throws
-      const inten=new Uint8Array(buf,off,n); off+=n;
-      this.frames.push({xyz,n});
-    }
-    this.goto(0);
-  }
-  goto(i){
-    if(!this.frames) return;
-    const f=this.frames[Math.min(i,this.frames.length-1)];
-    if(this.points){ this.scene.remove(this.points); this.points.geometry.dispose(); this.points.material.dispose(); }
-    const pos=new Float32Array(f.n*3), col=new Float32Array(f.n*3);
-    for(let k=0;k<f.n;k++){
-      const x=f.xyz[k*3]*0.01,y=f.xyz[k*3+1]*0.01,z=f.xyz[k*3+2]*0.01;
-      pos[k*3]=x; pos[k*3+1]=z; pos[k*3+2]=-y;
+  _buildGeometry(xyz,n){
+    const pos=new Float32Array(n*3), col=new Float32Array(n*3);
+    for(let k=0;k<n;k++){
+      const x=xyz[k*3]*0.01,y=xyz[k*3+1]*0.01,z=xyz[k*3+2]*0.01;
+      const [tx,ty,tz]=worldToThree(x,y,z);
+      pos[k*3]=tx; pos[k*3+1]=ty; pos[k*3+2]=tz;
       const t=Math.max(0,Math.min(1,(z+2.5)/5.5));
       col[k*3]=0.15+0.75*t; col[k*3+1]=0.35+0.35*(1-t); col[k*3+2]=0.85-0.65*t;
     }
     const g=new THREE.BufferGeometry();
     g.setAttribute('position',new THREE.BufferAttribute(pos,3));
     g.setAttribute('color',new THREE.BufferAttribute(col,3));
-    this.points=new THREE.Points(g,new THREE.PointsMaterial({size:0.34,vertexColors:true}));
-    this.scene.add(this.points);
+    return g;
+  }
+  async load(binUrl, metaUrl){
+    const gen=++this._loadGen;
+    this.geometries=null;
+    const [buf,meta]=await Promise.all([fetch(binUrl).then(r=>r.arrayBuffer()),fetch(metaUrl).then(r=>r.json())]);
+    if(gen!==this._loadGen) return;
+    this.frames=[]; let off=0;
+    for(const n of meta.counts){
+      const xyz=new Int16Array(buf.slice(off,off+n*6)); off+=n*6; off+=n;
+      this.frames.push({xyz,n});
+    }
+    this.geometries=new Array(this.frames.length);
+    this.geometries[0]=this._buildGeometry(this.frames[0].xyz, this.frames[0].n);
+    this.goto(0);
+    let i=1;
+    const buildRest=()=>{
+      if(gen!==this._loadGen) return;
+      const t0=performance.now();
+      while(i<this.frames.length && performance.now()-t0<12){
+        this.geometries[i]=this._buildGeometry(this.frames[i].xyz, this.frames[i].n);
+        i++;
+      }
+      if(i<this.frames.length) setTimeout(buildRest, 0);
+    };
+    setTimeout(buildRest, 0);
+  }
+  goto(i){
+    if(!this.geometries) return;
+    const idx=Math.min(i,this.geometries.length-1);
+    if(!this.geometries[idx] && this.frames && this.frames[idx]){
+      this.geometries[idx]=this._buildGeometry(this.frames[idx].xyz, this.frames[idx].n);
+    }
+    const g=this.geometries[idx];
+    if(!g) return;
+    if(this.points){
+      this.points.geometry=g;
+    } else {
+      this.points=new THREE.Points(g,this.material);
+      this.scene.add(this.points);
+    }
+  }
+  dispose(){
+    this._loadGen++;
+    if(this.points){ this.scene.remove(this.points); this.points=null; }
+    if(this.geometries){ this.geometries.forEach(g=>g&&g.dispose()); this.geometries=null; }
+    this.frames=null;
+    this.material.dispose();
   }
 }
 
@@ -125,6 +168,7 @@ const LEGEND=`
 function pick(id){
   cur=SAMPLES.find(s=>s.id===id); if(!cur) return;
   // teardown previous viewers so only ONE scene is ever resident
+  if(lid) lid.dispose();
   occ=null; lid=null; imgs={};
   if(playing) play();
   $('typ').textContent=cur.type; $('typ').className='badge '+cur.type;
@@ -142,11 +186,14 @@ function pick(id){
   P.append(panel('2D BEV', imgPanel('bev')));
   const oh=document.createElement('div'); oh.className='occ-canvas';
   P.append(panel('4D occupancy · drag to orbit', oh));
-  occ=new OccViewer(oh, cur.occ+'?v=composync', {embedded:true, topdown:true});
+  occ=new OccViewer(oh, cur.occ+'?v='+CACHE_TAG, {embedded:true, topdown:true});
   if(cur.lidar_bin){
     const lh=document.createElement('div'); lh.className='box3';
     P.append(panel('4D LiDAR (occ→LiDAR) · drag to orbit', lh));
-    lid=new PCViewer(lh); lid.load(cur.lidar_bin+'?v=composync', cur.lidar_meta+'?v=composync');
+    lid=new PCViewer(lh);
+    const hint=document.createElement('div'); hint.className='load-hint'; hint.textContent='Loading LiDAR…';
+    lh.append(hint);
+    lid.load(cur.lidar_bin+'?v='+CACHE_TAG, cur.lidar_meta+'?v='+CACHE_TAG).then(()=>{ if(hint.isConnected) hint.remove(); });
   } else if(cur.type==='composia' && cur.lidar_mp4){
     const v=document.createElement('video'); v.src=cur.lidar_mp4; v.loop=true; v.muted=true; v.autoplay=true; v.playsInline=true;
     const b=document.createElement('div'); b.className='box'; b.append(v);
@@ -156,7 +203,7 @@ function pick(id){
   nF=cur.bev.length; frame=0; $('slider').max=nF-1;
   setFrame(0);
 }
-function clampIdx(list){ return list[Math.min(frame, list.length-1)]+'?v=composync'; }  // cache-bust BEV/RGB/bbox images too (were showing stale frames)
+function clampIdx(list){ return list[Math.min(frame, list.length-1)]+'?v='+CACHE_TAG; }
 function setFrame(i){
   frame=((i%nF)+nF)%nF;
   if(imgs.bev) imgs.bev.src=clampIdx(cur.bev);
@@ -171,7 +218,7 @@ function play(){ playing=!playing; $('play').textContent=playing?'⏸':'▶';
 $('play').onclick=play;
 $('slider').oninput=e=>{ if(playing) play(); setFrame(+e.target.value); };
 
-fetch('samples.json?v=composync').then(r=>r.json()).then(m=>{
+fetch('samples.json?v='+CACHE_TAG).then(r=>r.json()).then(m=>{
   SAMPLES=m.samples;
   const sel=$('sel');
   for(const t of ['composia','SAFE','custom']){

@@ -51,7 +51,7 @@
     _init(d) {
       this.data = d;
       const [X, Y, Z] = d.spatial_size;
-      this.center = [X / 2, Z / 2, Y / 2];
+      this.center = [X / 2, Y / 2, Z / 2];
 
       const w = this.canvasHolder.clientWidth || 480;
       const h = this.canvasHolder.clientHeight || 340;
@@ -91,7 +91,14 @@
       requestAnimationFrame(this._loop);
     }
 
-    // flat [x,y,z,c, ...] -> one InstancedMesh per class c, positions centered at origin (y-up = grid z)
+    // grid (x=lateral, y=forward/BEV-up, z=height) -> Three.js y-up centered at origin.
+    // Camera sits on +Z looking back, so +X projects screen-right and (cy-y) puts BEV-up at top.
+    _gridToThree(gx, gy, gz) {
+      const [cx, cy, cz] = this.center;
+      return [gx - cx, gz - cz, cy - gy];
+    }
+
+    // flat [x,y,z,c, ...] -> one InstancedMesh per class c, positions centered at origin
     _addVoxels(flat, sink) {
       const byClass = new Map();
       for (let i = 0; i < flat.length; i += 4) {
@@ -99,7 +106,6 @@
         if (!byClass.has(c)) byClass.set(c, []);
         byClass.get(c).push(flat[i], flat[i + 1], flat[i + 2]);
       }
-      const [cx, cy, cz] = this.center;
       const mtx = new THREE.Matrix4();
       byClass.forEach((pos, c) => {
         const col = this.data.colors[c] || [180, 180, 180];
@@ -107,7 +113,8 @@
         const n = pos.length / 3;
         const mesh = new THREE.InstancedMesh(BOX, mat, n);
         for (let k = 0; k < n; k++) {
-          mtx.setPosition(pos[k * 3] - cx, pos[k * 3 + 2] - cz, cy - pos[k * 3 + 1]); // (x, z, -y): grid-y flipped so world-y -> screen up (matches BEV + LiDAR)
+          const [tx, ty, tz] = this._gridToThree(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]);
+          mtx.setPosition(tx, ty, tz);
           mesh.setMatrixAt(k, mtx);
         }
         mesh.instanceMatrix.needsUpdate = true;
@@ -115,12 +122,11 @@
       });
     }
 
-    // frame the camera to the occupied voxels (in centered three-space: pos = x-cx, z-cz, y-cy)
+    // frame the camera to the occupied voxels in centered three-space
     _fit(flat) {
-      const [cx, cy, cz] = this.center;
       let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
       for (let i = 0; i < flat.length; i += 4) {
-        const p = [flat[i] - cx, flat[i + 2] - cz, cy - flat[i + 1]];
+        const p = this._gridToThree(flat[i], flat[i + 1], flat[i + 2]);
         for (let k = 0; k < 3; k++) { if (p[k] < lo[k]) lo[k] = p[k]; if (p[k] > hi[k]) hi[k] = p[k]; }
       }
       if (lo[0] > hi[0]) return;
@@ -129,9 +135,7 @@
       const dist = (r / Math.sin((this.camera.fov * Math.PI / 180) / 2)) * 1.15;
       this.controls.target.set(mid[0], mid[1], mid[2]);
       if (this.opts && this.opts.topdown) {
-        // start ALIGNED-OBLIQUE: viewed from the BEV's bottom edge, tilted ~55 deg. Left/right/up
-        // match the 2D BEV (world x -> screen right, world y -> screen up) but height stays visible
-        // (a straight top-down start collapsed the grid into a flat plate). Still freely orbitable.
+        // from +Z (south of BEV-up): screen-right = +X, screen-up = BEV-forward
         this.camera.position.set(mid[0], mid[1] + dist * 0.82, mid[2] + dist * 0.57);
       } else {
         const dir = new THREE.Vector3(0.72, 0.6, 1.0).normalize();
