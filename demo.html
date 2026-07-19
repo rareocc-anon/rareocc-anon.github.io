@@ -48,15 +48,16 @@
 <script src="js/OrbitControls.js"></script>
 <script src="js/occ_viewer.js?v=orientfix8"></script>
 <script>
-const CACHE_TAG='orientfix8';
+const CACHE_TAG='egocentric_v2';
 const $=id=>document.getElementById(id);
 const TYPES={composia:'CompoSIA (video-diffusion edit)', SAFE:'SAFE (CIREN crash)', custom:'Custom (LLM prompt)'};
 let SAMPLES=[], cur=null, frame=0, nF=12, playing=false, timer=null;
 let occ=null, lid=null, imgs={};   // active viewers for the ONE open scene
 
-// SAFE/custom occ grids store BEV-up opposite CompoSIA; LiDAR meters already use CompoSIA-style forward.
+// All occ grids (incl. new CompoSIA occ_v2) store BEV-up as +y -> flip forward so occ matches BEV.
+// LiDAR meters already use CompoSIA-style forward, so this flip applies to occ only (see PCViewer).
 function axisOpts(type){
-  const flipFwd=type==='SAFE'||type==='custom';
+  const flipFwd=type==='SAFE'||type==='custom'||type==='composia';
   return {flipForward:flipFwd, flipLateral:false};
 }
 
