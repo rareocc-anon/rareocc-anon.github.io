@@ -1,0 +1,195 @@
+{
+ "header": {
+  "title": "ROCC vs UniScene (fair-best inference) \u2014 occupancy generation",
+  "agg_scope": "457 matched frame-0 val tokens \u00b7 fg-mIoU",
+  "agg_ours": 48.45,
+  "agg_uni": 20.06,
+  "agg_ratio": "2.4\u00d7",
+  "agg_note": "UniScene-v2 re-run at \u03bb=0.05 (released default) with strong generation settings (DDIM-50, cfg-7, no inversion). Same 12 curated scenes as the gallery.",
+  "uni_label": "UniScene-v2 \u00b7 \u03bb0.05",
+  "n_big": null,
+  "n_typ": null
+ },
+ "samples": [
+  {
+   "token": "123ccbcfede0508d",
+   "id": "123ccbcfede0",
+   "type": "typical",
+   "gap": 29.8,
+   "ours_fg": 47.2,
+   "uni_fg": 17.4,
+   "n_cls": 4,
+   "bev": "data/123ccbcfede0508d/bev.png",
+   "occ": {
+    "uniscene": "data/123ccbcfede0508d/uniscene.json",
+    "rocc": "data/123ccbcfede0508d/rocc.json",
+    "gt": "data/123ccbcfede0508d/gt.json"
+   }
+  },
+  {
+   "token": "a8cf9b2e5b915bb6",
+   "id": "a8cf9b2e5b91",
+   "type": "typical",
+   "gap": 25.3,
+   "ours_fg": 52.6,
+   "uni_fg": 27.3,
+   "n_cls": 3,
+   "bev": "data/a8cf9b2e5b915bb6/bev.png",
+   "occ": {
+    "uniscene": "data/a8cf9b2e5b915bb6/uniscene.json",
+    "rocc": "data/a8cf9b2e5b915bb6/rocc.json",
+    "gt": "data/a8cf9b2e5b915bb6/gt.json"
+   }
+  },
+  {
+   "token": "7560e5e9f3c8546e",
+   "id": "7560e5e9f3c8",
+   "type": "biggest-difference",
+   "gap": 43.4,
+   "ours_fg": 57.8,
+   "uni_fg": 14.4,
+   "n_cls": 2,
+   "bev": "data/7560e5e9f3c8546e/bev.png",
+   "occ": {
+    "uniscene": "data/7560e5e9f3c8546e/uniscene.json",
+    "rocc": "data/7560e5e9f3c8546e/rocc.json",
+    "gt": "data/7560e5e9f3c8546e/gt.json"
+   }
+  },
+  {
+   "token": "4bcb9e3e16035d14",
+   "id": "4bcb9e3e1603",
+   "type": "biggest-difference",
+   "gap": 32.9,
+   "ours_fg": 64.0,
+   "uni_fg": 31.1,
+   "n_cls": 2,
+   "bev": "data/4bcb9e3e16035d14/bev.png",
+   "occ": {
+    "uniscene": "data/4bcb9e3e16035d14/uniscene.json",
+    "rocc": "data/4bcb9e3e16035d14/rocc.json",
+    "gt": "data/4bcb9e3e16035d14/gt.json"
+   }
+  },
+  {
+   "token": "dc8459c22f4a5233",
+   "id": "dc8459c22f4a",
+   "type": "rocc-best",
+   "gap": 46.8,
+   "ours_fg": 62.0,
+   "uni_fg": 15.2,
+   "n_cls": 3,
+   "bev": "data/dc8459c22f4a5233/bev.png",
+   "occ": {
+    "uniscene": "data/dc8459c22f4a5233/uniscene.json",
+    "rocc": "data/dc8459c22f4a5233/rocc.json",
+    "gt": "data/dc8459c22f4a5233/gt.json"
+   }
+  },
+  {
+   "token": "3268fa3724b65a96",
+   "id": "3268fa3724b6",
+   "type": "rocc-best",
+   "gap": 23.5,
+   "ours_fg": 62.2,
+   "uni_fg": 38.7,
+   "n_cls": 3,
+   "bev": "data/3268fa3724b65a96/bev.png",
+   "occ": {
+    "uniscene": "data/3268fa3724b65a96/uniscene.json",
+    "rocc": "data/3268fa3724b65a96/rocc.json",
+    "gt": "data/3268fa3724b65a96/gt.json"
+   }
+  },
+  {
+   "token": "d0e3c834b38e51eb",
+   "id": "d0e3c834b38e",
+   "type": "rocc-worst",
+   "gap": 16.6,
+   "ours_fg": 17.4,
+   "uni_fg": 0.8,
+   "n_cls": 3,
+   "bev": "data/d0e3c834b38e51eb/bev.png",
+   "occ": {
+    "uniscene": "data/d0e3c834b38e51eb/uniscene.json",
+    "rocc": "data/d0e3c834b38e51eb/rocc.json",
+    "gt": "data/d0e3c834b38e51eb/gt.json"
+   }
+  },
+  {
+   "token": "f80a2df1b425566d",
+   "id": "f80a2df1b425",
+   "type": "rocc-worst",
+   "gap": 5.7,
+   "ours_fg": 19.7,
+   "uni_fg": 14.0,
+   "n_cls": 2,
+   "bev": "data/f80a2df1b425566d/bev.png",
+   "occ": {
+    "uniscene": "data/f80a2df1b425566d/uniscene.json",
+    "rocc": "data/f80a2df1b425566d/rocc.json",
+    "gt": "data/f80a2df1b425566d/gt.json"
+   }
+  },
+  {
+   "token": "600f55abedc5563b",
+   "id": "600f55abedc5",
+   "type": "uniscene-best",
+   "gap": 26.8,
+   "ours_fg": 58.8,
+   "uni_fg": 32.0,
+   "n_cls": 3,
+   "bev": "data/600f55abedc5563b/bev.png",
+   "occ": {
+    "uniscene": "data/600f55abedc5563b/uniscene.json",
+    "rocc": "data/600f55abedc5563b/rocc.json",
+    "gt": "data/600f55abedc5563b/gt.json"
+   }
+  },
+  {
+   "token": "03840be63f9d52ee",
+   "id": "03840be63f9d",
+   "type": "uniscene-best",
+   "gap": 18.3,
+   "ours_fg": 39.0,
+   "uni_fg": 20.7,
+   "n_cls": 4,
+   "bev": "data/03840be63f9d52ee/bev.png",
+   "occ": {
+    "uniscene": "data/03840be63f9d52ee/uniscene.json",
+    "rocc": "data/03840be63f9d52ee/rocc.json",
+    "gt": "data/03840be63f9d52ee/gt.json"
+   }
+  },
+  {
+   "token": "9b675150a0d5599f",
+   "id": "9b675150a0d5",
+   "type": "uniscene-worst",
+   "gap": 30.2,
+   "ours_fg": 42.9,
+   "uni_fg": 12.7,
+   "n_cls": 2,
+   "bev": "data/9b675150a0d5599f/bev.png",
+   "occ": {
+    "uniscene": "data/9b675150a0d5599f/uniscene.json",
+    "rocc": "data/9b675150a0d5599f/rocc.json",
+    "gt": "data/9b675150a0d5599f/gt.json"
+   }
+  },
+  {
+   "token": "868605a557015424",
+   "id": "868605a55701",
+   "type": "uniscene-worst",
+   "gap": 29.9,
+   "ours_fg": 32.9,
+   "uni_fg": 3.0,
+   "n_cls": 2,
+   "bev": "data/868605a557015424/bev.png",
+   "occ": {
+    "uniscene": "data/868605a557015424/uniscene.json",
+    "rocc": "data/868605a557015424/rocc.json",
+    "gt": "data/868605a557015424/gt.json"
+   }
+  }
+ ]
+}
